@@ -5,7 +5,7 @@ pipeline {
     }
 
     tools {
-        maven 'Maven-3.8.9' // Убедитесь, что Maven настроен в Jenkins (Manage Jenkins -> Global Tool Configuration)
+        maven 'Maven-3.9.8' // Убедитесь, что Maven настроен в Jenkins (Manage Jenkins -> Global Tool Configuration)
     }
 
     stages {
