@@ -34,7 +34,6 @@ pipeline {
             post {
                 always {
                     script {
-                        // Проверка наличия отчётов без findFiles
                         def hasReports = sh(
                             script: 'test -d target/surefire-reports && ls target/surefire-reports/TEST-*.xml 1>/dev/null 2>&1 && echo "1" || echo "0"',
                             returnStdout: true
@@ -44,7 +43,7 @@ pipeline {
                             echo '📊 Публикация JUnit-отчётов...'
                             junit 'target/surefire-reports/*.xml'
                         } else {
-                            echo '⚠️ No JUnit reports found. Check test structure.'
+                            echo '⚠️ No JUnit reports found.'
                         }
                     }
                 }
@@ -72,10 +71,14 @@ pipeline {
 
     post {
         always {
-            echo '🧹 Очистка...'
-            cleanWs()
-            // Архивация артефактов (опционально)
+            // ✅ ВАЖНО: Сначала архивируем, ПОТОМ очищаем!
             archiveArtifacts artifacts: 'target/*.jar', allowEmptyArchive: true
+            
+            // Опционально: архивируем лог деплоя
+            archiveArtifacts artifacts: 'deploy_log.txt', allowEmptyArchive: true
+            
+            echo '🧹 Очистка рабочего пространства...'
+            cleanWs()
         }
         failure {
             echo '❌ BUILD FAILED'
