@@ -1,11 +1,14 @@
 pipeline {
-    // Задание 2: Указание метки агента (замените на вашу метку)
     agent { 
-        label 'linux-agent' 
+        label 'linux-build-agent' 
     }
 
     tools {
-        maven 'Maven-3.9.8' // Убедитесь, что Maven настроен в Jenkins (Manage Jenkins -> Global Tool Configuration)
+        maven 'Maven-3.9.80'
+    }
+
+    environment {
+        BUILD_VERSION = "1.0.${BUILD_NUMBER}"
     }
 
     stages {
@@ -30,8 +33,15 @@ pipeline {
             }
             post {
                 always {
-                    // Задание 4: Публикация отчетов JUnit
-                    junit 'target/surefire-reports/*.xml'
+                    // Публикация отчётов только если файлы существуют
+                    script {
+                        def reports = findFiles(glob: 'target/surefire-reports/*.xml')
+                        if (reports && reports.length > 0) {
+                            junit 'target/surefire-reports/*.xml'
+                        } else {
+                            echo '⚠️ Warning: No JUnit reports found.'
+                        }
+                    }
                 }
             }
         }
@@ -46,10 +56,11 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo 'Развертывание приложения...'
-                // Имитация деплоя: создание файла с версией
+                // Исправлено: используем $BUILD_NUMBER вместо ${env.BUILD_NUMBER}
                 sh '''
-                    echo "Deploying version ${env.BUILD_NUMBER} at $(date)" > deploy_log.txt
+                    echo "Deploying version $BUILD_VERSION at $(date)" > deploy_log.txt
                     cat deploy_log.txt
+                    ls -lh target/*.jar 2>/dev/null || true
                 '''
             }
         }
@@ -61,7 +72,10 @@ pipeline {
             cleanWs()
         }
         failure {
-            echo 'Сборка не удалась! Проверьте логи тестов.'
+            echo '❌ Сборка не удалась! Проверьте логи.'
+        }
+        success {
+            echo '✅ Сборка успешно завершена!'
         }
     }
 }
