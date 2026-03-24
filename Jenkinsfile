@@ -1,59 +1,67 @@
 pipeline {
-    // Задание 2: Указание метки агента
+    // Задание 2: Указание метки агента (замените на вашу метку)
     agent { 
         label 'linux-agent' 
     }
 
-    environment {
-        // Пример переменной окружения
-        BUILD_VERSION = "1.0.${BUILD_NUMBER}"
+    tools {
+        maven 'Maven-3.8.9' // Убедитесь, что Maven настроен в Jenkins (Manage Jenkins -> Global Tool Configuration)
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Скачивание кода
+                echo 'Скачивание кода из репозитория...'
                 checkout scm
             }
         }
 
         stage('Compile') {
             steps {
-                // Компиляция (пример для Maven)
+                echo 'Компиляция проекта...'
                 sh 'mvn clean compile'
             }
         }
 
         stage('Test') {
             steps {
-                // Тестирование
+                echo 'Запуск тестов...'
                 sh 'mvn test'
             }
-            // Задание 4: Настройка отчетов (JUnit)
             post {
                 always {
+                    // Задание 4: Публикация отчетов JUnit
                     junit 'target/surefire-reports/*.xml'
                 }
             }
         }
 
+        stage('Package') {
+            steps {
+                echo 'Сборка JAR артефакта...'
+                sh 'mvn package -DskipTests'
+            }
+        }
+
         stage('Deploy') {
             steps {
-                // Развертывание (имитация)
-                sh 'echo "Deploying version ${BUILD_VERSION} to staging..."'
-                // Здесь может быть скрипт копирования артефактов или деплой в контейнер
+                echo 'Развертывание приложения...'
+                // Имитация деплоя: создание файла с версией
+                sh '''
+                    echo "Deploying version ${env.BUILD_NUMBER} at $(date)" > deploy_log.txt
+                    cat deploy_log.txt
+                '''
             }
         }
     }
 
     post {
         always {
-            // Очистка рабочего пространства
+            echo 'Очистка рабочего пространства...'
             cleanWs()
         }
         failure {
-            // Уведомление об ошибке (можно настроить почту или Slack)
-            echo 'Build failed! Check logs.'
+            echo 'Сборка не удалась! Проверьте логи тестов.'
         }
     }
 }
