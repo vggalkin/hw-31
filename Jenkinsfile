@@ -1,7 +1,7 @@
 pipeline {
     // Задание 2: Указание метки агента
     agent { 
-        label 'linux-build-agent' 
+        label 'linux-agent' 
     }
 
     environment {
