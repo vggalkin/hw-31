@@ -1,6 +1,6 @@
 pipeline {
     agent { 
-        label 'linux-build-agent' 
+        label 'linux-agent' 
     }
 
     tools {
